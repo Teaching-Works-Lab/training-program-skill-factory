@@ -38,6 +38,8 @@ def _hours(value: Any) -> tuple[float | None, bool]:
     components = [v for k, v in value.items() if k != "total_hours"]
     if not components and "total_hours" in value:
         stated = value["total_hours"]
+        if stated is None:
+            return None, False
         return (float(stated), True) if _number(stated) else (None, True)
     known = [v for v in components if v is not None]
     if not known:

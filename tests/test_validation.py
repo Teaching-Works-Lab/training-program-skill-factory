@@ -116,3 +116,12 @@ def test_aggregate_total_skips_when_any_course_hours_are_unknown(minimal_program
     program["courses"].append({"id": "COURSE-UNKNOWN", "title": "学时待核", "hours": {"lecture_hours": None}})
     program["aggregates"]["total_hours"] = 999
     assert "aggregate-total-hours-mismatch" not in issue_codes(program)
+
+
+def test_null_declared_course_total_is_unknown_not_invalid(minimal_program):
+    program = deepcopy(minimal_program)
+    program["courses"][0]["hours"] = {"total_hours": None}
+    codes = issue_codes(program)
+    assert "hours-value-invalid" not in codes
+    assert "course-hours-mismatch" not in codes
+    assert "aggregate-total-hours-mismatch" not in codes
