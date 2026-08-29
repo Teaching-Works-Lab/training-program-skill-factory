@@ -97,8 +97,8 @@ def validate_program(program: Mapping[str, Any]) -> list[Issue]:
     for relation in relations if isinstance(relations, list) else []:
         if not isinstance(relation, Mapping):
             continue
-        source = relation.get("source_id", relation.get("source"))
-        target = relation.get("target_id", relation.get("target"))
+        source = relation.get("source", relation.get("source_id"))
+        target = relation.get("target", relation.get("target_id"))
         if source not in all_ids:
             issues.append(_issue("relation-source-missing", "error", f"关系源实体不存在：{source}", source if isinstance(source, str) else None))
         if target not in all_ids:
@@ -153,7 +153,9 @@ def validate_program(program: Mapping[str, Any]) -> list[Issue]:
             total, known = _hours(requirement.get("hours"))
             if known and total is not None and total >= 0:
                 requirement_totals[requirement["id"]] = total
-    if isinstance(aggregate, Mapping) and (course_totals or requirement_totals):
+    course_rows = [c for c in program.get("courses", []) if isinstance(c, Mapping) and isinstance(c.get("id"), str)] if isinstance(program.get("courses", []), list) else []
+    course_hours_complete = all(c.get("id") in course_totals for c in course_rows)
+    if isinstance(aggregate, Mapping) and course_hours_complete and (course_totals or requirement_totals):
         stated_total = aggregate.get("total_hours")
         calculated_total = sum(course_totals.values()) + sum(requirement_totals.values())
         if _number(stated_total) and float(stated_total) != calculated_total:
