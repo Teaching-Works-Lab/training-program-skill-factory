@@ -15,3 +15,12 @@ def test_validation_report_groups_errors_before_warnings():
     assert text.index("错误") < text.index("警告")
     assert "Y" in text
 
+def test_catalog_renders_all_entities_in_numeric_order(minimal_program):
+    text = render_catalog(minimal_program)
+    assert all(token in text for token in ("培养目标", "毕业要求", "指标点", "课程"))
+
+def test_catalog_lists_unique_sorted_course_source_pages(minimal_program):
+    relation = minimal_program["relations"][1]
+    minimal_program["relations"].append({**relation, "provenance": {**relation["provenance"], "source_page": 3}})
+    text = render_catalog(minimal_program)
+    assert "来源页：1、3" in text

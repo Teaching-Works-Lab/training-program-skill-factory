@@ -30,7 +30,8 @@ def find_course(program: Mapping[str, Any], term: str) -> dict[str, Any]:
 
 
 def trace_course(program: Mapping[str, Any], course_id: str) -> dict[str, Any]:
-    find_course(program, course_id)
+    course = find_course(program, course_id)
+    course_id = str(course["id"])
     relations = [r for r in program.get("relations", []) if isinstance(r, Mapping) and "source" in r and "target" in r]
     direct = [dict(r) for r in relations if r["source"] == course_id and r.get("type") == "course_supports_indicator"]
     official = [r for r in direct if r.get("provenance", {}).get("source_kind") == "official_direct"]
@@ -41,6 +42,8 @@ def trace_course(program: Mapping[str, Any], course_id: str) -> dict[str, Any]:
         indicator = str(relation["target"])
         parent = indicator.rsplit(".", 1)[0] if "." in indicator else indicator
         for upper in relations:
-            if upper.get("source") == parent and upper.get("target") in objectives:
+            if (upper.get("source") == parent and upper.get("target") in objectives
+                    and upper.get("type") == "requirement_supports_objective"
+                    and upper.get("provenance", {}).get("source_kind") == "official_direct"):
                 derived.append({"source": course_id, "target": upper["target"], "source_kind": "derived_transitive", "via": [indicator, parent]})
-    return {"course": find_course(program, course_id), "official_indicator_relations": official, "derived_objective_relations": derived}
+    return {"course": course, "official_indicator_relations": official, "derived_objective_relations": derived}

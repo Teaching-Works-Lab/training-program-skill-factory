@@ -32,3 +32,12 @@ def test_trace_keeps_direct_and_derived_relations_separate(minimal_program):
     assert result["derived_objective_relations"][0]["source_kind"] == "derived_transitive"
     assert result["derived_objective_relations"][0]["target"] == "OBJ-1"
 
+def test_trace_uses_canonical_id_after_title_lookup(minimal_program):
+    result = trace_course(minimal_program, "智能制造基础")
+    assert result["course"]["id"] == "COURSE-DEMO"
+    assert result["official_indicator_relations"]
+
+def test_trace_only_derives_from_official_requirement_objective_relation(minimal_program):
+    program = deepcopy(minimal_program)
+    program["relations"][0]["provenance"]["source_kind"] = "derived_transitive"
+    assert trace_course(program, "COURSE-DEMO")["derived_objective_relations"] == []

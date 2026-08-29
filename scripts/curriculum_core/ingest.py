@@ -7,7 +7,7 @@ def _write(path: Path, value: Any):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-def scaffold_source(pdf_path: Path, output_dir: Path, *, runner: Callable | None = None, clock: Callable[[], float] | None = None) -> dict[str, Any]:
+def scaffold_source(pdf_path: Path, output_dir: Path, *, runner: Callable | None = None, clock: Callable[[], float] | None = None, page_counter: Callable[[Path], int] | None = None) -> dict[str, Any]:
     pdf_path, output_dir = Path(pdf_path), Path(output_dir)
     if not pdf_path.is_file(): raise FileNotFoundError(str(pdf_path))
     runner = runner or (lambda command: subprocess.run(command, capture_output=True, text=True))
@@ -22,8 +22,12 @@ def scaffold_source(pdf_path: Path, output_dir: Path, *, runner: Callable | None
         code = raw.get("returncode", 0) if isinstance(raw, dict) else getattr(raw, "returncode", 0)
         if code:
             raise RuntimeError("markitdown_failed")
-        pages = len([line for line in stdout.splitlines() if line.strip().lower().startswith(("# page", "<!-- page"))])
-        result["page_count"] = pages or max(1, stdout.count("\f") + 1 if stdout else 0)
+        if page_counter is None:
+            import fitz
+            with fitz.open(pdf_path) as document:
+                result["page_count"] = document.page_count
+        else:
+            result["page_count"] = int(page_counter(pdf_path))
         result["markdown_path"] = str(output_dir / "source.md")
         (output_dir).mkdir(parents=True, exist_ok=True)
         (output_dir / "source.md").write_text(stdout, encoding="utf-8")

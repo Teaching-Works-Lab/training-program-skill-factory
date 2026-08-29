@@ -18,9 +18,18 @@ def diff_programs(old: Mapping[str, Any], new: Mapping[str, Any]) -> dict[str, l
             name = normalize_term(str(row.get("title", "")))
             if ident not in a and name in old_names:
                 result["review_candidates"].append({"kind": kind, "old_id": old_names[name], "new_id": ident, "normalized_name": name})
-    old_rel = {(r.get("source"), r.get("type")): r for r in old.get("relations", []) if isinstance(r, Mapping)}
-    new_rel = {(r.get("source"), r.get("type")): r for r in new.get("relations", []) if isinstance(r, Mapping)}
+    def groups(program):
+        grouped = {}
+        for relation in program.get("relations", []):
+            if isinstance(relation, Mapping):
+                grouped.setdefault((relation.get("source"), relation.get("type")), []).append(relation)
+        return grouped
+    old_rel, new_rel = groups(old), groups(new)
     for key in sorted(set(old_rel) | set(new_rel), key=str):
-        if key not in old_rel or key not in new_rel or old_rel[key].get("target") != new_rel[key].get("target"):
-            result["relation_changes"].append({"old": old_rel.get(key), "new": new_rel.get(key)})
+        before = {tuple((r.get("source"), r.get("target"), r.get("type"))): r for r in old_rel.get(key, [])}
+        after = {tuple((r.get("source"), r.get("target"), r.get("type"))): r for r in new_rel.get(key, [])}
+        if before != after:
+            removed = [before[x] for x in sorted(set(before) - set(after), key=str)]
+            added = [after[x] for x in sorted(set(after) - set(before), key=str)]
+            result["relation_changes"].append({"old": removed or None, "new": added or None})
     return result

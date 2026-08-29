@@ -54,7 +54,7 @@ def main(argv=None):
         return 0
     except AmbiguousCourseError as exc:
         print(str(exc), file=sys.stderr); return 1
-    except (FileNotFoundError, OSError, ValueError, json.JSONDecodeError, RuntimeError) as exc:
+    except (FileNotFoundError, OSError, ValueError, KeyError, IndexError, json.JSONDecodeError, RuntimeError) as exc:
         print(str(exc), file=sys.stderr); return 2
 
 if __name__ == "__main__": sys.exit(main())
