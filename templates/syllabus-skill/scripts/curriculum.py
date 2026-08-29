@@ -7,7 +7,7 @@ from pathlib import Path
 
 from curriculum_core.io import load_program
 from curriculum_core.query import AmbiguousCourseError, trace_course
-from curriculum_core.render import render_validation_report
+from curriculum_core.render import render_query, render_validation_report
 from curriculum_core.validation import validate_program
 
 
@@ -31,12 +31,7 @@ def main(argv=None):
         if args.format == "json":
             print(json.dumps(result, ensure_ascii=False, indent=2))
         else:
-            print(f"# {result['course'].get('title', result['course']['id'])}\n\n## 官方直接关系")
-            for relation in result["official_indicator_relations"]:
-                print(f"- {relation['source']} -> {relation['target']}")
-            print("\n## 派生追踪")
-            for relation in result["derived_objective_relations"]:
-                print(f"- {relation['source']} -> {relation['target']}")
+            print(render_query(result), end="")
         return 0
     except AmbiguousCourseError as exc:
         print(str(exc), file=sys.stderr)

@@ -8,6 +8,8 @@ import re
 import shutil
 from pathlib import Path
 
+from curriculum_core.io import load_program
+from curriculum_core.validation import validate_program
 
 FACTORY_ROOT = Path(__file__).parents[1]
 TEMPLATE_ROOT = FACTORY_ROOT / "templates" / "syllabus-skill"
@@ -39,12 +41,17 @@ def generate_skill(
         raise ValueError("factory_commit must not be blank")
 
     source = Path(program_path)
-    program = json.loads(source.read_text(encoding="utf-8-sig"))
+    program = load_program(source)
     if not isinstance(program, dict) or not isinstance(program.get("schema_version"), str):
         raise ValueError("program_path must contain a program JSON object with schema_version")
+    issues = validate_program(program)
+    errors = [issue for issue in issues if issue.severity == "error"]
+    if errors:
+        raise ValueError("program validation failed: " + ", ".join(issue.code for issue in errors))
+    warnings = [issue for issue in issues if issue.severity == "warning"]
 
     output = Path(output_dir)
-    shutil.copytree(TEMPLATE_ROOT, output)
+    shutil.copytree(TEMPLATE_ROOT, output, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     for candidate in output.rglob("*"):
         if candidate.is_file():
             _replace_tokens(candidate, skill_name=skill_name, display_name=display_name)
@@ -61,6 +68,9 @@ def generate_skill(
         "source_program": "data/program.json",
         "source_schema_version": program["schema_version"],
         "template": "syllabus-skill",
+        "validator": "curriculum_core.validation.validate_program",
+        "error_count": 0,
+        "warning_count": len(warnings),
     }
     (output / "generated-from.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",

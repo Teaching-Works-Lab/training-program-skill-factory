@@ -32,7 +32,16 @@ def trace_course(program: Mapping[str, Any], course_id: str) -> dict[str, Any]:
     course = find_course(program, course_id)
     relations = [relation for relation in program.get("relations", []) if isinstance(relation, Mapping)]
     direct = [dict(relation) for relation in relations if relation.get("source") == course["id"] and relation.get("type") == "course_supports_indicator"]
-    official = [relation for relation in direct if relation.get("provenance", {}).get("source_kind") == "official_direct"]
+    official = [
+        relation for relation in direct
+        if relation.get("provenance", {}).get("source_kind") == "official_direct"
+        and relation.get("provenance", {}).get("verification_status") == "visually_verified"
+    ]
+    unresolved = [
+        relation for relation in direct
+        if relation.get("provenance", {}).get("source_kind") == "official_direct"
+        and relation.get("provenance", {}).get("verification_status") in {"extracted", "needs_review"}
+    ]
     parents = {
         str(indicator["id"]): indicator.get("graduation_requirement_id")
         for indicator in program.get("indicators", [])
@@ -44,6 +53,6 @@ def trace_course(program: Mapping[str, Any], course_id: str) -> dict[str, Any]:
         indicator = str(relation["target"])
         parent = str(parents[indicator]) if indicator in parents and parents[indicator] is not None else indicator.rsplit(".", 1)[0]
         for upper in relations:
-            if upper.get("source") == parent and upper.get("target") in objectives and upper.get("type") == "requirement_supports_objective" and upper.get("provenance", {}).get("source_kind") == "official_direct":
+            if upper.get("source") == parent and upper.get("target") in objectives and upper.get("type") == "requirement_supports_objective" and upper.get("provenance", {}).get("source_kind") == "official_direct" and upper.get("provenance", {}).get("verification_status") == "visually_verified":
                 derived.append({"source": course["id"], "target": upper["target"], "source_kind": "derived_transitive", "via": [indicator, parent]})
-    return {"course": course, "official_indicator_relations": official, "derived_objective_relations": derived}
+    return {"course": course, "official_indicator_relations": official, "derived_objective_relations": derived, "unresolved_indicator_relations": unresolved}
