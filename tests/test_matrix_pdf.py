@@ -108,6 +108,25 @@ def test_extract_ignores_unfilled_bezier_and_filled_rectangle_drawings():
     assert extract_matrix_page(_page(words, drawings), ("1.1",)) == []
 
 
+def test_replacement_glyph_is_not_a_text_symbol_candidate():
+    words = [
+        (2, 5, 8, 10, "CourseA", 0, 0, 0),
+        (12, 5, 16, 10, "�", 1, 0, 0),
+    ]
+    assert extract_matrix_page(_page(words), ("1.1",)) == []
+
+
+def test_filled_closed_near_circle_is_not_automatically_a_symbol():
+    drawings = [{
+        "rect": fitz.Rect(12, 5, 18, 11),
+        "items": [("c",), ("c",), ("c",), ("c",)],
+        "fill": (0, 0, 0),
+        "closePath": True,
+    }]
+    words = [(2, 5, 8, 10, "CourseA", 0, 0, 0)]
+    assert extract_matrix_page(_page(words, drawings), ("1.1",)) == []
+
+
 def test_extract_preserves_multiline_label_reading_order():
     words = [
         (2, 14, 8, 19, "Bottom", 0, 1, 0),

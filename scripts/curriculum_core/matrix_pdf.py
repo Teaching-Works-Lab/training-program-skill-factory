@@ -8,7 +8,7 @@ from typing import Any, Sequence
 
 _EPSILON = 0.75
 _MIN_LINE_LENGTH = 20.0
-_SYMBOL_GLYPHS = frozenset("●•·○◉■▪⬤◆�")
+_TEXT_SYMBOL = "●"
 
 
 class MatrixExtractionError(ValueError):
@@ -62,28 +62,20 @@ def _grid_from_page(page: Any) -> Grid:
 
 
 def _is_symbol(text: str) -> bool:
-    value = text.strip()
-    return bool(value) and all(char in _SYMBOL_GLYPHS for char in value)
+    return text.strip() == _TEXT_SYMBOL
 
 
 def _drawing_symbols(page: Any) -> list[tuple[float, float]]:
-    """Return centers of small filled circle/square drawing marks."""
-    symbols: list[tuple[float, float]] = []
-    for drawing in page.get_drawings():
-        rect = drawing.get("rect")
-        if rect is None or not (1.5 <= rect.width <= 12 and 1.5 <= rect.height <= 12):
-            continue
-        items = drawing.get("items", ())
-        has_curve = bool(items) and all(item and item[0] == "c" for item in items)
-        fill = drawing.get("fill")
-        aspect = rect.width / rect.height
-        if has_curve and drawing.get("closePath") and fill is not None and 0.75 <= aspect <= 1.33:
-            symbols.append(((rect.x0 + rect.x1) / 2, (rect.y0 + rect.y1) / 2))
-    return symbols
+    """Drawing marks are unsupported until an explicit source rule exists."""
+    return []
 
 
 def extract_matrix_page(page: Any, indicator_ids: Sequence[str]) -> list[dict[str, Any]]:
-    """Extract relation candidates from one matrix page without spatial guessing."""
+    """Extract exact ``●`` text candidates without spatial guessing.
+
+    Vector-only marks are intentionally not inferred; they need an explicit
+    source-specific adaptation before they can become candidates.
+    """
     grid = _grid_from_page(page)
     page_number = int(getattr(page, "number", 0)) + 1
     expected_columns = len(indicator_ids)
