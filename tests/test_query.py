@@ -41,3 +41,16 @@ def test_trace_only_derives_from_official_requirement_objective_relation(minimal
     program = deepcopy(minimal_program)
     program["relations"][0]["provenance"]["source_kind"] = "derived_transitive"
     assert trace_course(program, "COURSE-DEMO")["derived_objective_relations"] == []
+
+
+def test_trace_uses_indicator_requirement_field_for_dataset_style_id(minimal_program):
+    program = deepcopy(minimal_program)
+    program["indicators"][0]["id"] = "1.1"
+    program["indicators"][0]["graduation_requirement_id"] = "GR-1"
+    program["relations"][1]["target"] = "1.1"
+
+    derived = trace_course(program, "COURSE-DEMO")["derived_objective_relations"]
+
+    assert derived
+    assert derived[0]["target"] == "OBJ-1"
+    assert derived[0]["via"] == ["1.1", "GR-1"]
