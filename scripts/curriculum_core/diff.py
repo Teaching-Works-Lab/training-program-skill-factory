@@ -28,8 +28,13 @@ def diff_programs(old: Mapping[str, Any], new: Mapping[str, Any]) -> dict[str, l
     for key in sorted(set(old_rel) | set(new_rel), key=str):
         before = {tuple((r.get("source"), r.get("target"), r.get("type"))): r for r in old_rel.get(key, [])}
         after = {tuple((r.get("source"), r.get("target"), r.get("type"))): r for r in new_rel.get(key, [])}
+        changed = [before[x] for x in sorted(set(before) & set(after), key=str) if before[x] != after[x]]
+        changed_new = [after[x] for x in sorted(set(before) & set(after), key=str) if before[x] != after[x]]
         if before != after:
-            removed = [before[x] for x in sorted(set(before) - set(after), key=str)]
-            added = [after[x] for x in sorted(set(after) - set(before), key=str)]
-            result["relation_changes"].append({"old": removed or None, "new": added or None})
+            removed = changed + [before[x] for x in sorted(set(before) - set(after), key=str)]
+            added = changed_new + [after[x] for x in sorted(set(after) - set(before), key=str)]
+            if len(changed) == 1 and not (set(before) - set(after)) and not (set(after) - set(before)):
+                result["relation_changes"].append({"old": changed[0], "new": changed_new[0]})
+            else:
+                result["relation_changes"].append({"old": removed or None, "new": added or None})
     return result

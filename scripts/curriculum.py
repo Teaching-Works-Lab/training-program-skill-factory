@@ -24,7 +24,11 @@ def main(argv=None):
         if args.command == "extract-matrix":
             import fitz
             from curriculum_core.matrix_pdf import extract_matrix_page
+            if args.page < 1:
+                raise ValueError("page must be >= 1")
             with fitz.open(args.pdf) as document:
+                if args.page > len(document):
+                    raise ValueError(f"page out of range: {args.page}")
                 rows = extract_matrix_page(document[args.page - 1], args.indicators)
             args.output.write_text(json.dumps(rows, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             return 0

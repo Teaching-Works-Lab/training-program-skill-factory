@@ -25,3 +25,11 @@ def test_diff_keeps_multiple_same_source_type_relations_distinct(minimal_program
     new = deepcopy(old)
     new["relations"].pop()
     assert len(diff_programs(old, new)["relation_changes"]) == 1
+
+def test_diff_reports_relation_provenance_change(minimal_program):
+    old = deepcopy(minimal_program)
+    new = deepcopy(minimal_program)
+    new["relations"][1]["provenance"]["note"] = "updated"
+    changes = diff_programs(old, new)["relation_changes"]
+    assert len(changes) == 1
+    assert changes[0]["old"]["provenance"]["note"] != changes[0]["new"]["provenance"]["note"]
