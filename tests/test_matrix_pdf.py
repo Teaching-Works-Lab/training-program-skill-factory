@@ -40,7 +40,7 @@ class _Page:
             for y in (0, 20)
         ]
         self._words = [
-            (2.0, 5.0, 10.0, 15.0, "课程A", 0, 0, 0),
+        (2.0, 5.0, 10.0, 15.0, "CourseA", 0, 0, 0),
             (symbol_x - 2.0, 5.0, symbol_x + 2.0, 15.0, "●", 1, 0, 0),
         ]
 
@@ -52,11 +52,26 @@ class _Page:
         return self._words
 
 
+def _page(words, drawings=None, columns=(0, 10, 20), rows=(0, 20)):
+    page = _Page()
+    page._words = words
+    page._drawings = [
+        {"items": [("l", fitz.Point(x, 0), fitz.Point(x, 100))]}
+        for x in columns
+    ] + [
+        {"items": [("l", fitz.Point(0, y), fitz.Point(columns[-1], y))]}
+        for y in rows
+    ]
+    if drawings:
+        page._drawings.extend(drawings)
+    return page
+
+
 def test_extract_matrix_page_maps_filled_circle_to_indicator_cell():
     relations = extract_matrix_page(_Page(), ("1.1",))
     assert relations == [
         {
-            "course_label": "课程A",
+            "course_label": "CourseA",
             "indicator_id": "1.1",
             "page": 1,
             "symbol_coordinates": {"x": 15.0, "y": 10.0},
@@ -68,6 +83,59 @@ def test_extract_matrix_page_maps_filled_circle_to_indicator_cell():
 def test_extract_matrix_page_rejects_symbol_outside_detected_cell():
     with pytest.raises(MatrixExtractionError, match="page 1.*45"):
         extract_matrix_page(_Page(symbol_x=45.0), ("1.1",))
+
+
+def test_extract_skips_header_and_outside_grid_words():
+    words = [
+        (2, 5, 8, 10, "CourseA", 0, 0, 0),
+        (12, 5, 16, 10, "●", 1, 0, 0),
+        (999, 5, 1000, 10, "页脚", 9, 0, 0),
+    ]
+    assert len(extract_matrix_page(_page(words), ("1.1",))) == 1
+
+
+def test_extract_rejects_indicator_column_count_mismatch():
+    with pytest.raises(MatrixExtractionError, match="indicator columns"):
+        extract_matrix_page(_Page(), ("1.1", "1.2"))
+
+
+def test_extract_ignores_unfilled_bezier_and_filled_rectangle_drawings():
+    drawings = [
+        {"rect": fitz.Rect(12, 5, 18, 15), "items": [("c",) ], "fill": None},
+        {"rect": fitz.Rect(12, 5, 18, 15), "items": [("re", fitz.Rect(12, 5, 18, 15), 0)], "fill": (0, 0, 0)},
+    ]
+    words = [(2, 5, 8, 10, "课程A", 0, 0, 0)]
+    assert extract_matrix_page(_page(words, drawings), ("1.1",)) == []
+
+
+def test_extract_preserves_multiline_label_reading_order():
+    words = [
+        (2, 14, 8, 19, "Bottom", 0, 1, 0),
+        (12, 5, 16, 10, "●", 1, 0, 0),
+        (8, 2, 9, 4, "Top", 0, 0, 0),
+    ]
+    assert extract_matrix_page(_page(words), ("1.1",))[0]["course_label"] == "Top Bottom"
+
+
+def test_same_label_in_distinct_rows_is_allowed():
+    words = [
+        (2, 5, 8, 10, "Same", 0, 0, 0),
+        (12, 5, 16, 10, "●", 1, 0, 0),
+        (2, 25, 8, 30, "Same", 0, 1, 0),
+        (12, 25, 16, 30, "●", 1, 1, 0),
+    ]
+    page = _page(words, rows=(0, 20, 40))
+    assert len(extract_matrix_page(page, ("1.1",))) == 2
+
+
+def test_same_cell_duplicate_symbols_are_ambiguous():
+    words = [
+        (2, 5, 8, 10, "CourseA", 0, 0, 0),
+        (12, 5, 13, 10, "●", 1, 0, 0),
+        (17, 5, 18, 10, "●", 1, 1, 0),
+    ]
+    with pytest.raises(MatrixExtractionError, match="ambiguous"):
+        extract_matrix_page(_page(words), ("1.1",))
 
 
 @pytest.mark.skipif("TRAINING_PROGRAM_PDF" not in os.environ, reason="real PDF not configured")
@@ -84,6 +152,9 @@ def test_real_pdf_first_matrix_page_has_all_indicator_columns():
         relations = extract_matrix_page(doc[20], indicators)
     finally:
         doc.close()
-    assert relations
+    assert len(relations) == 103
     assert all(item["indicator_id"] in indicators for item in relations)
     assert all(item["verification_status"] == "extracted" for item in relations)
+    anchors = {(item["indicator_id"], round(item["symbol_coordinates"]["x"], 2), round(item["symbol_coordinates"]["y"], 2)) for item in relations}
+    assert ("6.1", 468.94, 155.84) in anchors
+    assert ("12.2", 766.06, 520.40) in anchors

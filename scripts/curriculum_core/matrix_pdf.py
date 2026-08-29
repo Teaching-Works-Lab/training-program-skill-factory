@@ -74,9 +74,10 @@ def _drawing_symbols(page: Any) -> list[tuple[float, float]]:
         if rect is None or not (1.5 <= rect.width <= 12 and 1.5 <= rect.height <= 12):
             continue
         items = drawing.get("items", ())
-        has_curve = any(item and item[0] in {"c", "re"} for item in items)
+        has_curve = bool(items) and all(item and item[0] == "c" for item in items)
         fill = drawing.get("fill")
-        if has_curve and (fill is not None or any(item and item[0] == "c" for item in items)):
+        aspect = rect.width / rect.height
+        if has_curve and drawing.get("closePath") and fill is not None and 0.75 <= aspect <= 1.33:
             symbols.append(((rect.x0 + rect.x1) / 2, (rect.y0 + rect.y1) / 2))
     return symbols
 
@@ -109,6 +110,7 @@ def extract_matrix_page(page: Any, indicator_ids: Sequence[str]) -> list[dict[st
     candidates.extend(_drawing_symbols(page))
 
     relations: list[dict[str, Any]] = []
+    seen_cells: set[tuple[int, int]] = set()
     for x, y in candidates:
         try:
             col = cell_index(x, grid.columns)
@@ -125,15 +127,18 @@ def extract_matrix_page(page: Any, indicator_ids: Sequence[str]) -> list[dict[st
         for word in words:
             x0, y0, x1, y1, text = word[:5]
             center_x, center_y = (x0 + x1) / 2, (y0 + y1) / 2
+            if not (grid.columns[0] <= center_x < grid.columns[-1]):
+                continue
             if cell_index(center_x, grid.columns) == 0 and grid.rows[row] <= center_y < grid.rows[row + 1]:
-                course_words.append((x0, text))
+                course_words.append((center_y, x0, word[5] if len(word) > 5 else 0, word[6] if len(word) > 6 else 0, word[7] if len(word) > 7 else 0, text))
         if not course_words:
             raise MatrixExtractionError(
                 f"page {page_number}: symbol at ({x:.2f}, {y:.2f}) has no course label in row {row}"
             )
-        if sum(1 for item in relations if item["course_label"] == " ".join(t for _, t in sorted(course_words)) and item["indicator_id"] == indicator_ids[col - 1]) > 0:
+        if (row, col) in seen_cells:
             raise MatrixExtractionError(f"page {page_number}: ambiguous duplicate symbol at ({x:.2f}, {y:.2f})")
-        label = " ".join(text for _, text in sorted(course_words))
+        seen_cells.add((row, col))
+        label = " ".join(item[-1] for item in sorted(course_words, key=lambda item: item[:-1]))
         relations.append({
             "course_label": label,
             "indicator_id": indicator_ids[col - 1],
