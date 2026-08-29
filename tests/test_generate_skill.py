@@ -56,11 +56,12 @@ def test_generate_skill_creates_a_standalone_skill(tmp_path: Path, minimal_progr
     assert validation.returncode == 0, validation.stderr
 
 
-def test_generate_skill_rejects_duplicate_ids_before_copy(tmp_path: Path, minimal_program: dict):
+def test_generate_skill_rejects_dangling_course_group_member_before_copy(tmp_path: Path, minimal_program: dict):
     from generate_skill import generate_skill
 
     invalid = dict(minimal_program)
-    invalid["courses"] = [*minimal_program["courses"], dict(minimal_program["courses"][0])]
+    invalid["course_groups"] = [dict(group) for group in minimal_program["course_groups"]]
+    invalid["course_groups"][0]["course_ids"] = ["COURSE-MISSING"]
     source = tmp_path / "invalid-program.json"
     source.write_text(json.dumps(invalid, ensure_ascii=False), encoding="utf-8")
     output = tmp_path / "should-not-exist"
@@ -69,8 +70,8 @@ def test_generate_skill_rejects_duplicate_ids_before_copy(tmp_path: Path, minima
         generate_skill(
             source,
             output,
-            skill_name="invalid-syllabus",
-            display_name="无效输入 Skill",
+            skill_name="dangling-syllabus",
+            display_name="悬空课程组 Skill",
             factory_commit="test-factory-commit",
         )
     assert not output.exists()

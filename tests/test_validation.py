@@ -72,6 +72,18 @@ def test_unknown_group_member_skips_exact_group_comparison(minimal_program):
     assert "aggregate-group-hours-mismatch" not in codes
 
 
+def test_reports_missing_course_group_member_as_error(minimal_program):
+    program = deepcopy(minimal_program)
+    program["course_groups"][0]["course_ids"] = ["COURSE-MISSING"]
+    issues = validate_program(program)
+    assert any(
+        issue.code == "course-group-member-missing"
+        and issue.severity == "error"
+        and issue.entity_id == "GROUP-DEMO"
+        for issue in issues
+    )
+
+
 def test_zero_support_entities_are_reported(minimal_program):
     program = deepcopy(minimal_program)
     program["indicators"].append({"id": "GR-1.2", "title": "未支撑指标"})

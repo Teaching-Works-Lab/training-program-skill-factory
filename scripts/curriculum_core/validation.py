@@ -110,6 +110,21 @@ def validate_program(program: Mapping[str, Any]) -> list[Issue]:
                 support_course[source].add(target)
                 support_indicator[target].add(source)
 
+    for group in program.get("course_groups", []) if isinstance(program.get("course_groups", []), list) else []:
+        if not isinstance(group, Mapping) or not isinstance(group.get("id"), str):
+            continue
+        members = group.get("course_ids")
+        if not isinstance(members, list):
+            continue
+        for course_id in members:
+            if isinstance(course_id, str) and course_id not in buckets["course"]:
+                issues.append(_issue(
+                    "course-group-member-missing",
+                    "error",
+                    f"课程组成员课程不存在：{group['id']} -> {course_id}",
+                    group["id"],
+                ))
+
     for course in program.get("courses", []) if isinstance(program.get("courses", []), list) else []:
         if not isinstance(course, Mapping) or not isinstance(course.get("id"), str):
             continue
