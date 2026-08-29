@@ -1,0 +1,67 @@
+from copy import deepcopy
+
+from curriculum_core.io import load_program
+from curriculum_core.validation import validate_program
+
+
+def issue_codes(program):
+    return {issue.code for issue in validate_program(program)}
+
+
+def test_reports_relation_to_missing_indicator(minimal_program_path):
+    program = load_program(minimal_program_path)
+    program["relations"][1]["target"] = "GR-9.9"
+    assert "relation-target-missing" in issue_codes(program)
+
+
+def test_blank_hours_and_zero_hours_are_not_equivalent(minimal_program_path):
+    program = load_program(minimal_program_path)
+    course = program["courses"][0]
+    course["hours"] = {"experiment_hours": None, "practice_hours": 0}
+    assert "hours-value-invalid" not in issue_codes(program)
+
+
+def test_support_count_over_five_is_warning(minimal_program_path):
+    program = load_program(minimal_program_path)
+    relation = deepcopy(program["relations"][1])
+    for index in range(2, 7):
+        item = deepcopy(relation)
+        item["target"] = f"GR-1.{index}"
+        program["indicators"].append({"id": item["target"], "title": f"指标点{index}"})
+        program["relations"].append(item)
+    issues = validate_program(program)
+    assert any(i.code == "course-support-count-high" and i.severity == "warning" for i in issues)
+
+
+def test_duplicate_ids_and_missing_relation_source_are_errors(minimal_program):
+    program = deepcopy(minimal_program)
+    program["courses"].append({"id": "COURSE-DEMO", "title": "重复课程", "hours": 1})
+    program["relations"][0]["source"] = "NO-SUCH-ENTITY"
+    issues = validate_program(program)
+    assert any(i.code == "duplicate-id" and i.severity == "error" for i in issues)
+    assert any(i.code == "relation-source-missing" and i.severity == "error" for i in issues)
+
+
+def test_null_course_components_do_not_claim_hours_mismatch(minimal_program):
+    program = deepcopy(minimal_program)
+    program["courses"][0]["hours"] = {"lecture_hours": None, "practice_hours": None}
+    program["aggregates"]["total_hours"] = 999
+    assert "course-hours-mismatch" not in issue_codes(program)
+
+
+def test_zero_support_entities_are_reported(minimal_program):
+    program = deepcopy(minimal_program)
+    program["indicators"].append({"id": "GR-1.2", "title": "未支撑指标"})
+    program["courses"].append({"id": "COURSE-UNSUPPORTED", "title": "未支撑课程", "hours": 1})
+    codes = issue_codes(program)
+    assert "indicator-support-zero" in codes
+    assert "course-support-zero" in codes
+
+
+def test_aggregate_group_hours_mismatch_is_reported(minimal_program):
+    program = deepcopy(minimal_program)
+    program["aggregates"]["total_hours"] = 99
+    program["aggregates"]["hours_by_group"]["GROUP-DEMO"] = 99
+    codes = issue_codes(program)
+    assert "aggregate-total-hours-mismatch" in codes
+    assert "aggregate-group-hours-mismatch" in codes
