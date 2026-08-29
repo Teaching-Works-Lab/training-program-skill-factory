@@ -1,0 +1,7 @@
+interface:
+  display_name: "培养方案到课程大纲 Skill 工厂"
+  short_description: "从培养方案 PDF 生成、审核并复盘专业大纲 Skill"
+  default_prompt: "Use $training-program-skill-factory with a source PDF, target professional Skill name, and publication boundary."
+
+policy:
+  allow_implicit_invocation: true

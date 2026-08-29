@@ -1,0 +1,7 @@
+interface:
+  display_name: "{{DISPLAY_NAME}}"
+  short_description: "基于已核验培养方案查询课程关系与待编制大纲字段"
+  default_prompt: "Use ${{SKILL_NAME}} to query a course and keep official, derived, and pending syllabus content separate."
+
+policy:
+  allow_implicit_invocation: true
