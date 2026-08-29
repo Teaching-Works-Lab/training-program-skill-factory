@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0.0",
+  "program": {
+    "id": "PROGRAM-DEMO",
+    "title": "智能制造工程培养方案",
+    "hours": null
+  },
+  "training_objectives": [
+    {"id": "OBJ-1", "title": "具备智能制造系统设计能力", "hours": null}
+  ],
+  "graduation_requirements": [
+    {"id": "GR-1", "title": "工程知识", "hours": 16}
+  ],
+  "indicators": [
+    {"id": "GR-1.1", "title": "掌握工程基础知识", "hours": null}
+  ],
+  "courses": [
+    {"id": "COURSE-DEMO", "title": "智能制造基础", "hours": 32}
+  ],
+  "course_groups": [
+    {"id": "GROUP-DEMO", "title": "专业基础课程", "course_ids": ["COURSE-DEMO"]}
+  ],
+  "relations": [
+    {
+      "source": "GR-1",
+      "target": "OBJ-1",
+      "type": "requirement_supports_objective",
+      "provenance": {
+        "source_kind": "official_direct",
+        "source_file_hash": "fixture-sha256",
+        "source_page": 1,
+        "source_table": "fixture",
+        "source_symbol": "●",
+        "verification_status": "visually_verified",
+        "note": "测试夹具"
+      }
+    },
+    {
+      "source": "COURSE-DEMO",
+      "target": "GR-1.1",
+      "type": "course_supports_indicator",
+      "provenance": {
+        "source_kind": "official_direct",
+        "source_file_hash": "fixture-sha256",
+        "source_page": 1,
+        "source_table": "fixture",
+        "source_symbol": "●",
+        "verification_status": "visually_verified",
+        "note": "测试夹具"
+      }
+    }
+  ],
+  "aggregates": {
+    "total_hours": 48,
+    "hours_by_group": {"GROUP-DEMO": 32}
+  }
+}

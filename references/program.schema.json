@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/training-program.schema.json",
+  "type": "object",
+  "required": ["schema_version", "program", "training_objectives", "graduation_requirements", "courses", "course_groups", "relations", "aggregates"],
+  "properties": {
+    "schema_version": {"type": "string", "minLength": 1},
+    "program": {"$ref": "#/$defs/entity"},
+    "training_objectives": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
+    "graduation_requirements": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
+    "courses": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
+    "course_groups": {"type": "array", "items": {"$ref": "#/$defs/course_group"}},
+    "relations": {"type": "array", "items": {"$ref": "#/$defs/relation"}},
+    "aggregates": {"type": "object", "additionalProperties": true}
+  },
+  "$defs": {
+    "hours": {"type": ["number", "null"], "minimum": 0},
+    "entity": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "title": {"type": "string"},
+        "hours": {"$ref": "#/$defs/hours"}
+      },
+      "additionalProperties": true
+    },
+    "course_group": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "title": {"type": "string"},
+        "course_ids": {"type": "array", "items": {"type": "string"}},
+        "hours": {"$ref": "#/$defs/hours"}
+      },
+      "additionalProperties": true
+    },
+    "relation": {
+      "type": "object",
+      "required": ["source", "target", "type", "provenance"],
+      "properties": {
+        "source": {"type": "string", "minLength": 1},
+        "target": {"type": "string", "minLength": 1},
+        "type": {"type": "string", "minLength": 1},
+        "provenance": {"$ref": "#/$defs/provenance"}
+      },
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source_kind", "source_file_hash", "source_page", "source_table", "source_symbol", "verification_status", "note"],
+      "properties": {
+        "source_kind": {"type": "string", "minLength": 1},
+        "source_file_hash": {"type": "string", "minLength": 1},
+        "source_page": {"type": "integer", "minimum": 1},
+        "source_table": {"type": "string", "minLength": 1},
+        "source_symbol": {"type": "string"},
+        "verification_status": {"type": "string", "minLength": 1},
+        "note": {"type": "string"}
+      },
+      "additionalProperties": true
+    }
+  }
+}
