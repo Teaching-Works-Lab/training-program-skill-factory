@@ -36,6 +36,9 @@ def _hours(value: Any) -> tuple[float | None, bool]:
     if not isinstance(value, Mapping):
         return None, True
     components = [v for k, v in value.items() if k != "total_hours"]
+    if not components and "total_hours" in value:
+        stated = value["total_hours"]
+        return (float(stated), True) if _number(stated) else (None, True)
     known = [v for v in components if v is not None]
     if not known:
         return None, False
@@ -115,7 +118,7 @@ def validate_program(program: Mapping[str, Any]) -> list[Issue]:
             v is None or (_number(v) and float(v) >= 0)
             for v in (value.values() if isinstance(value, Mapping) else [value])
         )
-        if value is not None and (not known or total is None or not nonnegative):
+        if value is not None and ((known and total is None) or not nonnegative):
             issues.append(_issue("hours-value-invalid", "error", f"课程学时值无效：{cid}", cid))
         if isinstance(value, Mapping) and "total_hours" in value and known and total is not None:
             stated = value["total_hours"]
@@ -162,7 +165,10 @@ def validate_program(program: Mapping[str, Any]) -> list[Issue]:
                 group = groups.get(gid)
                 if not group or not _number(stated):
                     continue
-                calculated = sum(course_totals.get(cid, 0) for cid in group.get("course_ids", []))
+                members = group.get("course_ids", [])
+                if not isinstance(members, list) or any(cid not in course_totals for cid in members):
+                    continue
+                calculated = sum(course_totals[cid] for cid in members)
                 if float(stated) != calculated:
                     issues.append(_issue("aggregate-group-hours-mismatch", "error", f"课程组汇总学时与计算值不一致：{gid}", gid))
     return issues

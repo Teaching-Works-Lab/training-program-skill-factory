@@ -8,13 +8,23 @@
     "program": {"$ref": "#/$defs/entity"},
     "training_objectives": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
     "graduation_requirements": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
-    "courses": {"type": "array", "items": {"$ref": "#/$defs/entity"}},
+    "courses": {"type": "array", "items": {"$ref": "#/$defs/course"}},
     "course_groups": {"type": "array", "items": {"$ref": "#/$defs/course_group"}},
     "relations": {"type": "array", "items": {"$ref": "#/$defs/relation"}},
     "aggregates": {"type": "object", "additionalProperties": true}
   },
   "$defs": {
     "hours": {"type": ["number", "null"], "minimum": 0},
+    "course_hours": {
+      "type": "object",
+      "properties": {
+        "lecture_hours": {"$ref": "#/$defs/hours"},
+        "experiment_hours": {"$ref": "#/$defs/hours"},
+        "practice_hours": {"$ref": "#/$defs/hours"},
+        "total_hours": {"$ref": "#/$defs/hours"}
+      },
+      "additionalProperties": true
+    },
     "entity": {
       "type": "object",
       "required": ["id"],
@@ -22,6 +32,16 @@
         "id": {"type": "string", "minLength": 1},
         "title": {"type": "string"},
         "hours": {"$ref": "#/$defs/hours"}
+      },
+      "additionalProperties": true
+    },
+    "course": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "title": {"type": "string"},
+        "hours": {"$ref": "#/$defs/course_hours"}
       },
       "additionalProperties": true
     },

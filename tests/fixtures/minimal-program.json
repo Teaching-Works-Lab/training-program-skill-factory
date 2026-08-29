@@ -15,7 +15,7 @@
     {"id": "GR-1.1", "title": "掌握工程基础知识", "hours": null}
   ],
   "courses": [
-    {"id": "COURSE-DEMO", "title": "智能制造基础", "hours": 32}
+    {"id": "COURSE-DEMO", "title": "智能制造基础", "hours": {"total_hours": 32}}
   ],
   "course_groups": [
     {"id": "GROUP-DEMO", "title": "专业基础课程", "course_ids": ["COURSE-DEMO"]}

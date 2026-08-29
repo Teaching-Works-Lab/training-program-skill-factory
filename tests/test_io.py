@@ -27,3 +27,9 @@ def test_write_json_round_trips_chinese(tmp_path: Path):
     write_json(target, payload)
     assert load_program(target) == payload
     assert "智能制造工程" in target.read_text(encoding="utf-8")
+
+
+def test_course_component_hours_zero_and_null_are_schema_valid(minimal_program):
+    course = minimal_program["courses"][0]
+    course["hours"] = {"lecture_hours": None, "practice_hours": 0}
+    validate_schema(minimal_program)

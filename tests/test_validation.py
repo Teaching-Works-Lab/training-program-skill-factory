@@ -47,6 +47,23 @@ def test_null_course_components_do_not_claim_hours_mismatch(minimal_program):
     program["courses"][0]["hours"] = {"lecture_hours": None, "practice_hours": None}
     program["aggregates"]["total_hours"] = 999
     assert "course-hours-mismatch" not in issue_codes(program)
+    assert "hours-value-invalid" not in issue_codes(program)
+
+
+def test_invalid_structure_is_reported_without_recovery_crash(minimal_program):
+    program = deepcopy(minimal_program)
+    program["indicators"] = None
+    program["course_groups"][0]["course_ids"] = None
+    issues = validate_program(program)
+    assert any(issue.code == "schema-invalid" for issue in issues)
+
+
+def test_unknown_group_member_skips_exact_group_comparison(minimal_program):
+    program = deepcopy(minimal_program)
+    program["course_groups"][0]["course_ids"].append("COURSE-UNKNOWN")
+    program["aggregates"]["hours_by_group"]["GROUP-DEMO"] = 32
+    codes = issue_codes(program)
+    assert "aggregate-group-hours-mismatch" not in codes
 
 
 def test_zero_support_entities_are_reported(minimal_program):
