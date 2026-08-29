@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -5,6 +6,19 @@ import subprocess
 import sys
 
 import pytest
+
+
+def _independent_template_digest(template_root: Path) -> str:
+    entries = []
+    for path in sorted(template_root.rglob("*"), key=lambda item: item.relative_to(template_root).as_posix()):
+        if not path.is_file() or "__pycache__" in path.parts or path.suffix == ".pyc":
+            continue
+        entries.append({
+            "path": path.relative_to(template_root).as_posix(),
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        })
+    canonical = json.dumps(entries, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def test_generate_skill_creates_a_standalone_skill(tmp_path: Path, minimal_program_path: Path):
@@ -32,6 +46,9 @@ def test_generate_skill_creates_a_standalone_skill(tmp_path: Path, minimal_progr
 
     manifest = json.loads((output / "generated-from.json").read_text(encoding="utf-8"))
     assert manifest["factory_commit"] == "test-factory-commit"
+    template_root = Path(__file__).parents[1] / "templates" / "syllabus-skill"
+    assert manifest["template_digest"] == f"sha256:{_independent_template_digest(template_root)}"
+    assert manifest["template_digest_algorithm"].startswith("sha256(canonical JSON array")
     assert manifest["source_program"] == "data/program.json"
     assert manifest["validator"] == "curriculum_core.validation.validate_program"
     assert manifest["error_count"] == 0
@@ -54,6 +71,16 @@ def test_generate_skill_creates_a_standalone_skill(tmp_path: Path, minimal_progr
         capture_output=True,
     )
     assert validation.returncode == 0, validation.stderr
+
+    markdown = subprocess.run(
+        [sys.executable, "scripts/curriculum.py", "query", "data/program.json", "--course", "COURSE-DEMO", "--format", "markdown"],
+        cwd=output,
+        env=environment,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    assert "- COURSE-DEMO -> OBJ-1（经由 GR-1.1 -> GR-1）" in markdown.stdout
 
 
 def test_generate_skill_rejects_dangling_course_group_member_before_copy(tmp_path: Path, minimal_program: dict):

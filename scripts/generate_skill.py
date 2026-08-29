@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import shutil
@@ -14,6 +15,25 @@ from curriculum_core.validation import validate_program
 FACTORY_ROOT = Path(__file__).parents[1]
 TEMPLATE_ROOT = FACTORY_ROOT / "templates" / "syllabus-skill"
 SKILL_NAME_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+TEMPLATE_DIGEST_ALGORITHM = (
+    "sha256(canonical JSON array of sorted {path, sha256} entries; UTF-8; "
+    "sort_keys=true; separators=(',', ':'); __pycache__ and *.pyc excluded)"
+)
+
+
+def template_tree_digest(template_root: Path = TEMPLATE_ROOT) -> str:
+    """Return a deterministic digest of the copyable template file tree."""
+    entries = []
+    for path in sorted(template_root.rglob("*"), key=lambda item: item.relative_to(template_root).as_posix()):
+        relative = path.relative_to(template_root)
+        if not path.is_file() or "__pycache__" in relative.parts or path.suffix == ".pyc":
+            continue
+        entries.append({
+            "path": relative.as_posix(),
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        })
+    canonical = json.dumps(entries, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def _replace_tokens(path: Path, *, skill_name: str, display_name: str) -> None:
@@ -65,6 +85,8 @@ def generate_skill(
     manifest = {
         "generated_skill": skill_name,
         "factory_commit": factory_commit,
+        "template_digest": f"sha256:{template_tree_digest()}",
+        "template_digest_algorithm": TEMPLATE_DIGEST_ALGORITHM,
         "source_program": "data/program.json",
         "source_schema_version": program["schema_version"],
         "template": "syllabus-skill",
