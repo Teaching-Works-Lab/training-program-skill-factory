@@ -11,7 +11,7 @@
 - 查询课程到指标点的官方直接关系，以及经毕业要求追踪到培养目标的派生关系；
 - 对学校身份和私有源文件信息进行受控匿名化；
 - 生成可独立安装、查询和校验的专业课程大纲 Skill；
-- 记录转换耗时、常见问题和仍待验证的提速假设。
+- 记录转换耗时、常见问题、适用范围、经验冲突和仍待验证的提速假设。
 
 它不会根据课程名称自动编造课程目标、教材、教学进度或考核权重。来源未提供的课程大纲字段保持 `待编制`。
 
@@ -26,7 +26,7 @@
 
 ## 快速开始
 
-项目在 Python 3.12 环境完成验证。结构校验使用 `jsonschema`，PDF 矩阵候选提取使用 PyMuPDF；完整 PDF 摄入流程还会使用本机 MarkItDown。
+项目在 Python 3.12 环境完成验证。结构校验使用 `jsonschema`，PDF 矩阵候选提取使用 PyMuPDF；本地 PDF 优先使用 MarkItDown 建立 Markdown 候选，Markdown 导出 DOCX、HTML、PDF 等格式时优先使用 Pandoc。
 
 ```powershell
 git clone https://github.com/Teaching-Works-Lab/training-program-skill-factory.git
@@ -59,12 +59,13 @@ py -3.12 scripts/curriculum.py validate data/program.json
 
 ## 最小工作流
 
-1. 将 PDF 转为 Markdown，同时保留原 PDF 作为事实来源。
+1. 本地 PDF 优先用 MarkItDown 转为 Markdown，同时保留原 PDF 作为复杂版面和事实复核来源。
 2. 建立候选数据；自动提取结果只能标为 `extracted` 或 `needs_review`。
 3. 对复杂表格和矩阵按原 PDF 逐项复核，保存页码、符号和审核决定。
 4. 运行 `validate`，分别处理错误、建议性警告和未解决项。
 5. 明确公开边界并匿名化获准字段。
-6. 生成独立专业 Skill，并在目标目录进行可移植性验证。
+6. 生成独立专业 Skill，并在目标目录进行可移植性验证；需要办公格式时再用 Pandoc 导出。
+7. 记录本次问题、工具版本、运行条件、处理与证据；分类为通用、条件性、本机特例或待验证，并检查是否与旧经验冲突。
 
 结构校验通过不等于事实审核、视觉复核或培养质量评价完成。
 
