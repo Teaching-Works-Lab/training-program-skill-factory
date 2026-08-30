@@ -4,6 +4,8 @@
 
 本仓库是“转换工厂”，不是某个专业的数据仓库。智能制造工程的成品 Skill 位于 [intelligent-manufacturing-syllabus](https://github.com/Teaching-Works-Lab/intelligent-manufacturing-syllabus)。
 
+它属于 [Teaching Works Lab 课程教学 Skill 体系](https://github.com/Teaching-Works-Lab)：工厂负责生成可审核的专业数据 Skill，课程基座与课程大纲编制由 `course-teaching-workflows` 按需使用这些数据。
+
 ## 适合做什么
 
 - 从培养方案建立课程、课程组、培养目标、毕业要求和指标点的数据关系；
@@ -57,6 +59,15 @@ py -3.12 scripts/curriculum.py validate data/program.json
 ```
 
 如果作为 Codex Skill 安装，将整个仓库克隆或复制到 `$CODEX_HOME/skills/training-program-skill-factory`；未设置 `CODEX_HOME` 时通常使用 `~/.codex/skills/`。
+
+也可以通过组织 Marketplace 选择安装：
+
+```text
+codex plugin marketplace add Teaching-Works-Lab/.github
+codex plugin add training-program-skill-factory@teaching-works-lab
+```
+
+安装 Plugin 后可显式使用 `$training-program-skill-factory`。工厂生成的专业 Skill 是一个待审核产物，不会因为安装了工厂而自动安装；审核完成后仍需由用户明确选择安装位置或发布方式。
 
 ## 最小工作流
 

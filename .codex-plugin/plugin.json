@@ -1,0 +1,34 @@
+{
+  "name": "training-program-skill-factory",
+  "version": "0.1.0",
+  "description": "Convert university training programs into reviewable professional syllabus data Skills.",
+  "author": {
+    "name": "Teaching Works Lab",
+    "url": "https://github.com/Teaching-Works-Lab"
+  },
+  "homepage": "https://github.com/Teaching-Works-Lab/training-program-skill-factory",
+  "repository": "https://github.com/Teaching-Works-Lab/training-program-skill-factory",
+  "keywords": [
+    "education",
+    "training-program",
+    "syllabus",
+    "skill-factory"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Training Program Skill Factory",
+    "shortDescription": "Build reviewable syllabus data Skills from training programs.",
+    "longDescription": "Extract, validate, anonymize, and convert university training-program evidence into independently reviewable professional syllabus data Skills.",
+    "developerName": "Teaching Works Lab",
+    "category": "Education",
+    "capabilities": [
+      "Extract and validate training-program data",
+      "Generate professional syllabus data Skills",
+      "Preserve provenance and unresolved fields"
+    ],
+    "defaultPrompt": [
+      "Create a reviewable professional syllabus Skill from this training program.",
+      "Audit this training-program dataset before generating a Skill."
+    ]
+  }
+}
