@@ -21,6 +21,7 @@
 
 - 读取、提取、审核或更新数据时，再读取 [数据模型说明](references/schema.md)。
 - 执行完整转换时参考 [工作流](docs/workflow.md)。
+- 复用模板、脚本、命令行参数或确定最小审核范围时，读取 [复用与提速](docs/reuse-and-speed.md)。
 - 只有复盘过程时才需要读取 [经验总结](docs/lessons-learned.md)、[常见坑](docs/pitfalls.md) 和 [性能记录](docs/performance.md)。
 - 不要把测试夹具当作真实专业数据，也不要把派生追踪写成官方矩阵。
 
@@ -69,6 +70,10 @@ py -3.12 scripts/curriculum.py validate data/program.json
 
 结构校验通过不等于事实审核、视觉复核或培养质量评价完成。
 
+## 复用优先
+
+工厂已经提供下游 Skill 模板、生成器、通用 CLI、JSON Schema 和测试夹具。新专业先复用这些资产，把专业名、数据路径、输出目录和 Skill 身份作为参数输入；不要把课程事实写死到 Python，也不要为一次特殊情况新建配置框架。完整清单、命令示例、提速机制和最小充分审核规则见 [复用与提速](docs/reuse-and-speed.md)。
+
 ## 仓库结构
 
 ```text
@@ -77,7 +82,7 @@ scripts/curriculum.py        查询、校验、渲染、差异比较等 CLI
 scripts/generate_skill.py    下游专业 Skill 生成器
 references/                  数据模式与 JSON Schema
 templates/syllabus-skill/    最小专业 Skill 模板
-docs/                        工作流、经验、常见坑和性能记录
+docs/                        工作流、复用提速、经验、常见坑和性能记录
 tests/                       单元测试、真实 PDF 环境门控烟测和合成夹具
 ```
 
