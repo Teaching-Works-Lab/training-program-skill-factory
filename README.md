@@ -6,6 +6,20 @@
 
 它属于 [Teaching Works Lab 课程教学 Skill 体系](https://github.com/Teaching-Works-Lab)：工厂负责生成可审核的专业数据 Skill，课程基座与课程大纲编制由 `course-teaching-workflows` 按需使用这些数据。
 
+## WorkBuddy 安装（Skill）
+
+本仓库根目录的 `SKILL.md` 即 WorkBuddy Skill 入口，直接克隆到 WorkBuddy 的 skills 目录即可使用：
+
+```bash
+git clone https://github.com/Teaching-Works-Lab/training-program-skill-factory.git ~/.workbuddy/skills/training-program-skill-factory
+```
+
+保留目录结构，不要单独复制 `SKILL.md`——`references/`、`data/`、`scripts/` 都是 Skill 的组成部分。安装后无需重启或注册，下次对话即可通过 `@skill:training-program-skill-factory` 显式调用，或由 WorkBuddy 按 Skill 描述自动选择。
+
+运行环境：运行依赖见仓库脚本与依赖清单；Skill 加载后按需安装。
+
+WorkBuddy 通过 `~/.workbuddy/skills/` 目录发现 Skill，不使用 Codex Marketplace；两种方式可并存，互不干扰。
+
 ## 适合做什么
 
 - 从培养方案建立课程、课程组、培养目标、毕业要求和指标点的数据关系；
